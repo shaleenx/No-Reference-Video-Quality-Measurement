@@ -45,7 +45,8 @@ plt.ylabel("Percentage of Dissatisfied Users")
 a_corr = st.pearsonr(a_mos, a_pdus)
 b_corr = st.pearsonr(b_mos, b_pdus)
 
-print("-"*15, "Linear Correlation Coefficients between MOS and PDUs", "-"*15)
+print("\n")
+print("-"*21, "Linear Correlation Coefficients between MOS and PDUs", "-"*22)
 print("HDR Videos:", a_corr[0])
 print("Full HD Videos:", b_corr[0])
 
@@ -61,6 +62,9 @@ def f_score(x, y):
     #return st.f.cdf(f, df_x, df_y)
     return f
 
+print("\n")
+print('-'*31, "Model Testing Results | F-Scores", '-'*32)
+
 #### Linear Regression ####
 lingress = LinearRegression()
 
@@ -72,7 +76,7 @@ lingress.fit(b_mos.reshape(-1, 1), b_pdus)#b_pdus.reshape(-1, 1))
 b_lingress_pred_pdus = lingress.predict(b_mos.reshape(-1, 1))
 b_f = f_score(b_lingress_pred_pdus, b_pdus)
 
-print("-"*30, "Linear Regression Model F-Scores", "-"*30)
+print("-"*36, "Linear Regression Model", "-"*36)
 print("HDR Videos:", a_f)
 print("Full HD Videos:", b_f)
 
@@ -104,7 +108,7 @@ b_logress_pred_pdus = logress(b_mos, b_alphas)
 a_f = f_score(a_logress_pred_pdus, a_pdus)
 b_f = f_score(b_logress_pred_pdus, b_pdus)
 
-print("-"*30, "Logistic Regression Model F-Scores", "-"*30)
+print("-"*35, "Logistic Regression Model", "-"*35)
 print("HDR Videos:", a_f)
 print("Full HD Videos:", b_f)
 
@@ -123,7 +127,7 @@ b_gauss_pred_pdus = gpr.predict(b_mos.reshape(-1, 1))
 a_f = f_score(a_gauss_pred_pdus, a_pdus)
 b_f = f_score(b_gauss_pred_pdus, b_pdus)
 
-print("-"*30, "Gaussian Model F-Scores", "-"*30)
+print("-"*40, "Gaussian Model", "-"*41)
 print("HDR Videos:", a_f)
 print("Full HD Videos:", b_f)
 
@@ -132,6 +136,7 @@ def mse(x, y):
 
 #### Training on one, testing on other ####
 
+print("\n")
 print("-"*15, "Training on HDR and Predicting Full HD PDUs | Mean Squared Errors", "-"*15)
 
 #### Linear Model ####
@@ -149,5 +154,6 @@ print("Logistic Model:", a_logress_mse)
 a_gauss_pred_pdus = gpr.predict(a_mos.reshape(-1, 1))   #The model is already fit with b
 a_gauss_mse = mse(a_gauss_pred_pdus, a_pdus)
 print("Gaussian Model:", a_gauss_mse)
+print()
 
 #plt.show()
