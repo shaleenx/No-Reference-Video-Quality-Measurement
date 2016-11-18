@@ -59,11 +59,10 @@ def f_score(x, y):
         f = v_res_x/v_res_y
     else:
         f = v_res_y/v_res_x
-    #return st.f.cdf(f, df_x, df_y)
-    return f
+    return f, st.f.cdf(f, df_x, df_y)
 
 print("\n")
-print('-'*31, "Model Testing Results | F-Scores", '-'*32)
+print('-'*26, "Model Testing Results | (F-Score, p-value)", '-'*27)
 
 #### Linear Regression ####
 lingress = LinearRegression()
