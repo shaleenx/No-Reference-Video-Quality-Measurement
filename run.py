@@ -26,6 +26,9 @@ b_mos = np.mean(b, axis=1)
 a_std = np.std(a, axis=1)
 b_std = np.std(b, axis=1)
 
+a_corr = st.pearsonr(a_mos, a_pdus)
+b_corr = st.pearsonr(b_mos, b_pdus)
+
 plt.figure()
 p, q = np.polyfit(a_mos, a_pdus, deg=1)
 plt.plot(a_mos, p*a_mos + q, color='green')
@@ -33,6 +36,7 @@ plt.scatter(a_mos, a_pdus)  #, color='r', alpha=0.9)
 plt.title("HDR Videos")#Mean Opinion Scores against Percentage of Dissatisfied Users")
 plt.xlabel("Mean Opinion Score")
 plt.ylabel("Percentage of Dissatisfied Users")
+plt.annotate("Pearson Correlation Coefficient: "+str(a_corr[0]), xy=(3.5, 80))
 
 plt.figure()
 p, q = np.polyfit(a_mos, a_pdus, deg=1)
@@ -41,9 +45,7 @@ plt.scatter(b_mos, b_pdus)  #, color='b', alpha=0.2)
 plt.title("Full HD Videos")#Mean Opinion Scores against Percentage of Dissatisfied Users")
 plt.xlabel("Mean Opinion Score")
 plt.ylabel("Percentage of Dissatisfied Users")
-
-a_corr = st.pearsonr(a_mos, a_pdus)
-b_corr = st.pearsonr(b_mos, b_pdus)
+plt.annotate("Pearson Correlation Coefficient: "+str(b_corr[0]), xy=(4, 80))
 
 print("\n")
 print("-"*21, "Linear Correlation Coefficients between MOS and PDUs", "-"*22)
@@ -90,7 +92,7 @@ def a_loss_function(alphas):
 def b_loss_function(alphas):
     return np.sum( (b_pdus - logress(b_mos, alphas))**2 )
 
-a_alphas = minimize(a_loss_function, [10, 1, 3, 1]).x
+a_alphas = minimize(a_loss_function, [1000, 2, 2, 1]).x
 a_logress_pred_pdus = logress(a_mos, a_alphas)
 
 b_alphas = minimize(b_loss_function, [10, 1, 3, 10]).x
@@ -133,26 +135,53 @@ print("Full HD Videos:", b_f)
 def mse(x, y):
     return np.mean( (x-y)**2 )
 
+a_lingress_mse = mse(a_lingress_pred_pdus, a_pdus)
+a_logress_mse = mse(a_logress_pred_pdus, a_pdus)
+a_gauss_mse = mse(a_gauss_pred_pdus, a_pdus)
+b_lingress_mse = mse(b_lingress_pred_pdus, b_pdus)
+b_logress_mse = mse(b_logress_pred_pdus, b_pdus)
+b_gauss_mse = mse(b_gauss_pred_pdus, b_pdus)
+
+plt.figure()
+plt.scatter(a_mos, a_pdus, color='red', label='Actual Values')  #, color='r', alpha=0.9)
+plt.scatter(a_mos, a_lingress_pred_pdus, color='black', label='Linear Regression | MSE: '+str(a_lingress_mse), alpha=0.8)
+plt.scatter(a_mos, a_logress_pred_pdus, color='blue', label='Logisitic Regression | MSE: '+str(a_logress_mse), alpha=0.8)
+plt.scatter(a_mos, a_gauss_pred_pdus, color='green', label='Gaussian Process Regression | MSE: '+str(a_gauss_mse), alpha=0.8)
+plt.title("HDR Videos")#Mean Opinion Scores against Percentage of Dissatisfied Users")
+plt.xlabel("Mean Opinion Score")
+plt.ylabel("Percentage of Dissatisfied Users")
+plt.legend()
+
+plt.figure()
+plt.scatter(b_mos, b_pdus, color='red', label='Actual Values')  #, color='r', alpha=0.9)
+plt.scatter(b_mos, b_lingress_pred_pdus, color='black', label='Linear Regression | MSE: '+str(b_lingress_mse), alpha=0.8)
+plt.scatter(b_mos, b_logress_pred_pdus, color='blue', label='Logisitic Regression | MSE: '+str(b_logress_mse), alpha=0.8)
+plt.scatter(b_mos, b_gauss_pred_pdus, color='green', label='Gaussian Process Regression | MSE: '+str(b_gauss_mse), alpha=0.8)
+plt.title("Full HD Videos")#Mean Opinion Scores against Percentage of Dissatisfied Users")
+plt.xlabel("Mean Opinion Score")
+plt.ylabel("Percentage of Dissatisfied Users")
+plt.legend()
+
 #### Training on one, testing on other ####
 
 print("\n")
 print("-"*15, "Training on HDR and Predicting Full HD PDUs | Mean Squared Errors", "-"*15)
 
 #### Linear Model ####
-a_lingress_pred_pdus = lingress.predict(a_mos.reshape(-1, 1))   #The model is already fit with b
-a_lingress_mse = mse(a_lingress_pred_pdus, a_pdus)
-print("Linear Model:", a_lingress_mse)
+anew_lingress_pred_pdus = lingress.predict(a_mos.reshape(-1, 1))   #The model is already fit with b
+anew_lingress_mse = mse(anew_lingress_pred_pdus, a_pdus)
+print("Linear Model:", anew_lingress_mse)
 
 #### Logistic Model ####
-a_logress_pred_pdus = logress(a_mos, b_alphas)  #b_alphas have already been calculated
-a_logress_mse = mse(a_logress_pred_pdus, a_pdus)
-print("Logistic Model:", a_logress_mse)
+anew_logress_pred_pdus = logress(a_mos, b_alphas)  #b_alphas have already been calculated
+anew_logress_mse = mse(anew_logress_pred_pdus, a_pdus)
+print("Logistic Model:", anew_logress_mse)
 
 #### Gaussian Model ####
-#a_gauss_pred_pdus = 100*st.norm(a_mos, a_std).cdf(a_thresh) #NEED TO CHECK!!!
-a_gauss_pred_pdus = gpr.predict(a_mos.reshape(-1, 1))   #The model is already fit with b
-a_gauss_mse = mse(a_gauss_pred_pdus, a_pdus)
-print("Gaussian Model:", a_gauss_mse)
+#anew_gauss_pred_pdus = 100*st.norm(anew_mos, anew_std).cdf(anew_thresh) #NEED TO CHECK!!!
+anew_gauss_pred_pdus = gpr.predict(a_mos.reshape(-1, 1))   #The model is already fit with b
+anew_gauss_mse = mse(anew_gauss_pred_pdus, a_pdus)
+print("Gaussian Model:", anew_gauss_mse)
 print()
 
-#plt.show()
+plt.show()
