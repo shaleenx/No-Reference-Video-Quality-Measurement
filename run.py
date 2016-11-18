@@ -8,6 +8,8 @@ from sklearn.gaussian_process import GaussianProcessRegressor
 
 from scipy.optimize import minimize
 
+import scikits.bootstrap as bootstrap
+
 data = spio.loadmat('data_CS306.mat')
 
 a = data['data_144']
@@ -98,14 +100,6 @@ a_logress_pred_pdus = logress(a_mos, a_alphas)
 b_alphas = minimize(b_loss_function, [10, 1, 3, 10]).x
 b_logress_pred_pdus = logress(b_mos, b_alphas)
 
-#logress = LogisticRegression()
-#logress.fit(a_mos.reshape(-1, 1), a_pdus.ravel())#a_pdus.reshape(-1, 1))
-#
-#a_pred_pdus = logress.predict(a_mos.reshape(-1, 1))
-#
-#logress.fit(b_mos.reshape(-1, 1), b_pdus.ravel())#b_pdus.reshape(-1, 1))
-#b_pred_pdus = logress.predict(b_mos.reshape(-1, 1))
-
 a_f = f_score(a_logress_pred_pdus, a_pdus)
 b_f = f_score(b_logress_pred_pdus, b_pdus)
 
@@ -114,8 +108,6 @@ print("HDR Videos:", a_f)
 print("Full HD Videos:", b_f)
 
 #### Gaussian Model ####
-#a_gauss_pred_pdus = 100*st.norm(a_mos, a_std).cdf(a_thresh)
-#b_gauss_pred_pdus = 100*st.norm(b_mos, b_std).cdf(b_thresh)
 
 gpr = GaussianProcessRegressor()
 
@@ -141,6 +133,21 @@ a_gauss_mse = mse(a_gauss_pred_pdus, a_pdus)
 b_lingress_mse = mse(b_lingress_pred_pdus, b_pdus)
 b_logress_mse = mse(b_logress_pred_pdus, b_pdus)
 b_gauss_mse = mse(b_gauss_pred_pdus, b_pdus)
+
+print()
+print("-"*40, "Self-fit MSE", "-"*40)
+print()
+print("LINEAR MODEL")
+print("HDR:", a_lingress_mse)
+print("Full HD:", b_lingress_mse)
+print()
+print("LOGISTIC MODEL")
+print("HDR:", a_logress_mse)
+print("Full HD:", b_logress_mse)
+print()
+print("GAUSSIAN MODEL")
+print("HDR:", a_gauss_mse)
+print("Full HD:", b_gauss_mse)
 
 plt.figure()
 plt.scatter(a_mos, a_pdus, color='red', label='Actual Values')  #, color='r', alpha=0.9)
@@ -184,4 +191,49 @@ anew_gauss_mse = mse(anew_gauss_pred_pdus, a_pdus)
 print("Gaussian Model:", anew_gauss_mse)
 print()
 
-plt.show()
+a_mean_linear_low, a_mean_linear_high = bootstrap.ci(data=(a_lingress_pred_pdus-a_pdus)**2, statfunction=np.mean, alpha=0.05)
+a_var_linear_low, a_var_linear_high = bootstrap.ci(data=(a_lingress_pred_pdus-a_pdus)**2, statfunction=np.var, alpha=0.05)
+
+b_mean_linear_low, b_mean_linear_high = bootstrap.ci(data=(b_lingress_pred_pdus-b_pdus)**2, statfunction=np.mean, alpha=0.05)
+b_var_linear_low, b_var_linear_high = bootstrap.ci(data=(b_lingress_pred_pdus-b_pdus)**2, statfunction=np.var, alpha=0.05)
+
+a_mean_logistic_low, a_mean_logistic_high = bootstrap.ci(data=(a_logress_pred_pdus-a_pdus)**2, statfunction=np.mean, alpha=0.05)
+a_var_logistic_low, a_var_logistic_high = bootstrap.ci(data=(a_logress_pred_pdus-a_pdus)**2, statfunction=np.var, alpha=0.05)
+
+b_mean_logistic_low, b_mean_logistic_high = bootstrap.ci(data=(b_logress_pred_pdus-b_pdus)**2, statfunction=np.mean, alpha=0.05)
+b_var_logistic_low, b_var_logistic_high = bootstrap.ci(data=(b_logress_pred_pdus-b_pdus)**2, statfunction=np.var, alpha=0.05)
+
+a_mean_gauss_low, a_mean_gauss_high = bootstrap.ci(data=(a_gauss_pred_pdus-a_pdus)**2, statfunction=np.mean, alpha=0.05)
+a_var_gauss_low, a_var_gauss_high = bootstrap.ci(data=(a_gauss_pred_pdus-a_pdus)**2, statfunction=np.var, alpha=0.05)
+
+b_mean_gauss_low, b_mean_gauss_high = bootstrap.ci(data=(b_gauss_pred_pdus-b_pdus)**2, statfunction=np.mean, alpha=0.05)
+b_var_gauss_low, b_var_gauss_high = bootstrap.ci(data=(b_gauss_pred_pdus-b_pdus)**2, statfunction=np.var, alpha=0.05)
+
+print("-"*30, "Bootstrap | (CI_low, mean, CI_high)", "-"*30)
+print("-"*40, "HDR", "-"*40)
+print("LINEAR MODEL")
+print("MSE:", a_mean_linear_low, mse(a_lingress_pred_pdus, a_pdus), a_mean_linear_high)
+#print("VARIANCE:", a_var_linear_low, np.var(a_lingress_pred_pdus), a_var_linear_high)
+
+print("LOGISTIC MODEL")
+print("MSE:", a_mean_logistic_low, mse(a_logress_pred_pdus, a_pdus), a_mean_logistic_high)
+#print("VARIANCE:", a_var_logistic_low, np.var(a_logress_pred_pdus), a_var_logistic_high)
+
+print("GAUSSIAN MODEL")
+print("MSE:", a_mean_gauss_low, mse(a_gauss_pred_pdus, a_pdus), a_mean_gauss_high)
+#print("VARIANCE:", a_var_gauss_low, np.var(a_gauss_pred_pdus), a_var_gauss_high)
+
+print("-"*40, "FULL HD", "-"*40)
+print("LINEAR MODEL")
+print("MSE:", b_mean_linear_low, mse(b_lingress_pred_pdus, b_pdus), b_mean_linear_high)
+#print("VARIANCE:", b_var_linear_low, np.var(b_lingress_pred_pdus), b_var_linear_high)
+
+print("LOGISTIC MODEL")
+print("MSE:", b_mean_logistic_low, mse(b_logress_pred_pdus, b_pdus), b_mean_logistic_high)
+#print("VARIANCE:", b_var_logistic_low, np.var(b_logress_pred_pdus), b_var_logistic_high)
+
+print("GAUSSIAN MODEL")
+print("MSE:", b_mean_gauss_low, mse(b_gauss_pred_pdus, b_pdus), b_mean_gauss_high)
+#print("VARIANCE:", b_var_gauss_low, np.var(b_gauss_pred_pdus), b_var_gauss_high)
+
+#plt.show()
