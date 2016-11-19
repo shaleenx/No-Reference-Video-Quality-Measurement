@@ -15,9 +15,9 @@ data = spio.loadmat('data_CS306.mat')
 a = data['data_144']
 b = data['data_100']
 
-# Taking mean as the thresholds
-a_thresh = 3#np.mean(a)
-b_thresh = 3#np.mean(b)
+# Taking 3 as the threshold
+a_thresh = 3
+b_thresh = 3
 
 a_pdus = np.sum(a<a_thresh, axis=1)*100/a.shape[1]
 b_pdus = np.sum(b<b_thresh, axis=1)*100/b.shape[1]
@@ -34,8 +34,8 @@ b_corr = st.pearsonr(b_mos, b_pdus)
 plt.figure()
 p, q = np.polyfit(a_mos, a_pdus, deg=1)
 plt.plot(a_mos, p*a_mos + q, color='green')
-plt.scatter(a_mos, a_pdus)  #, color='r', alpha=0.9)
-plt.title("HDR Videos")#Mean Opinion Scores against Percentage of Dissatisfied Users")
+plt.scatter(a_mos, a_pdus)
+plt.title("HDR Videos")
 plt.xlabel("Mean Opinion Score")
 plt.ylabel("Percentage of Dissatisfied Users")
 plt.annotate("Pearson Correlation Coefficient: "+str(a_corr[0]), xy=(3.5, 80))
@@ -43,8 +43,8 @@ plt.annotate("Pearson Correlation Coefficient: "+str(a_corr[0]), xy=(3.5, 80))
 plt.figure()
 p, q = np.polyfit(a_mos, a_pdus, deg=1)
 plt.plot(b_mos, p*b_mos + q, color='green')
-plt.scatter(b_mos, b_pdus)  #, color='b', alpha=0.2)
-plt.title("Full HD Videos")#Mean Opinion Scores against Percentage of Dissatisfied Users")
+plt.scatter(b_mos, b_pdus)
+plt.title("Full HD Videos")
 plt.xlabel("Mean Opinion Score")
 plt.ylabel("Percentage of Dissatisfied Users")
 plt.annotate("Pearson Correlation Coefficient: "+str(b_corr[0]), xy=(4, 80))
@@ -71,11 +71,11 @@ print('-'*26, "Model Testing Results | (F-Score, p-value)", '-'*27)
 #### Linear Regression ####
 lingress = LinearRegression()
 
-lingress.fit(a_mos.reshape(-1, 1), a_pdus)#a_pdus.reshape(-1, 1))
+lingress.fit(a_mos.reshape(-1, 1), a_pdus)
 a_lingress_pred_pdus = lingress.predict(a_mos.reshape(-1, 1))
 a_f = f_score(a_lingress_pred_pdus, a_pdus)
 
-lingress.fit(b_mos.reshape(-1, 1), b_pdus)#b_pdus.reshape(-1, 1))
+lingress.fit(b_mos.reshape(-1, 1), b_pdus)
 b_lingress_pred_pdus = lingress.predict(b_mos.reshape(-1, 1))
 b_f = f_score(b_lingress_pred_pdus, b_pdus)
 
@@ -150,26 +150,26 @@ print("HDR:", a_gauss_mse)
 print("Full HD:", b_gauss_mse)
 
 plt.figure()
-plt.scatter(a_mos, a_pdus, color='red', label='Actual Values')  #, color='r', alpha=0.9)
+plt.scatter(a_mos, a_pdus, color='red', label='Actual Values')
 plt.scatter(a_mos, a_lingress_pred_pdus, color='black', label='Linear Regression | MSE: '+str(a_lingress_mse), alpha=0.8)
 plt.scatter(a_mos, a_logress_pred_pdus, color='blue', label='Logisitic Regression | MSE: '+str(a_logress_mse), alpha=0.8)
 plt.scatter(a_mos, a_gauss_pred_pdus, color='green', label='Gaussian Process Regression | MSE: '+str(a_gauss_mse), alpha=0.8)
-plt.title("HDR Videos")#Mean Opinion Scores against Percentage of Dissatisfied Users")
+plt.title("HDR Videos")
 plt.xlabel("Mean Opinion Score")
 plt.ylabel("Percentage of Dissatisfied Users")
 plt.legend()
 
 plt.figure()
-plt.scatter(b_mos, b_pdus, color='red', label='Actual Values')  #, color='r', alpha=0.9)
+plt.scatter(b_mos, b_pdus, color='red', label='Actual Values')
 plt.scatter(b_mos, b_lingress_pred_pdus, color='black', label='Linear Regression | MSE: '+str(b_lingress_mse), alpha=0.8)
 plt.scatter(b_mos, b_logress_pred_pdus, color='blue', label='Logisitic Regression | MSE: '+str(b_logress_mse), alpha=0.8)
 plt.scatter(b_mos, b_gauss_pred_pdus, color='green', label='Gaussian Process Regression | MSE: '+str(b_gauss_mse), alpha=0.8)
-plt.title("Full HD Videos")#Mean Opinion Scores against Percentage of Dissatisfied Users")
+plt.title("Full HD Videos")
 plt.xlabel("Mean Opinion Score")
 plt.ylabel("Percentage of Dissatisfied Users")
 plt.legend()
 
-#### Training on one, testing on other ####
+#### Training on Full HD, testing on HDR ####
 
 print("\n")
 print("-"*15, "Training on HDR and Predicting Full HD PDUs | Mean Squared Errors", "-"*15)
@@ -209,7 +209,7 @@ a_var_gauss_low, a_var_gauss_high = bootstrap.ci(data=(a_gauss_pred_pdus-a_pdus)
 b_mean_gauss_low, b_mean_gauss_high = bootstrap.ci(data=(b_gauss_pred_pdus-b_pdus)**2, statfunction=np.mean, alpha=0.05)
 b_var_gauss_low, b_var_gauss_high = bootstrap.ci(data=(b_gauss_pred_pdus-b_pdus)**2, statfunction=np.var, alpha=0.05)
 
-print("-"*30, "Bootstrap | (CI_low, mean, CI_high)", "-"*30)
+print("-"*25, "Bootstrap | (CI_low, MSE, CI_high)", "-"*25)
 print("-"*40, "HDR", "-"*40)
 print("LINEAR MODEL")
 print("MSE:", a_mean_linear_low, mse(a_lingress_pred_pdus, a_pdus), a_mean_linear_high)
@@ -235,5 +235,22 @@ print("MSE:", b_mean_logistic_low, mse(b_logress_pred_pdus, b_pdus), b_mean_logi
 print("GAUSSIAN MODEL")
 print("MSE:", b_mean_gauss_low, mse(b_gauss_pred_pdus, b_pdus), b_mean_gauss_high)
 #print("VARIANCE:", b_var_gauss_low, np.var(b_gauss_pred_pdus), b_var_gauss_high)
+
+anew_mean_linear_low, anew_mean_linear_high = bootstrap.ci(data=(anew_lingress_pred_pdus-a_pdus)**2, statfunction=np.mean, alpha=0.05)
+anew_mean_logistic_low, anew_mean_logistic_high = bootstrap.ci(data=(anew_logress_pred_pdus-a_pdus)**2, statfunction=np.mean, alpha=0.05)
+anew_mean_gauss_low, anew_mean_gauss_high = bootstrap.ci(data=(anew_gauss_pred_pdus-a_pdus)**2, statfunction=np.mean, alpha=0.05)
+
+print()
+print("Training on Full HD and Testing on HDR")
+print("-"*25, "Bootstrap | (CI_low, MSE, CI_high)", "-"*25)
+print("-"*40, "HDR", "-"*40)
+print("LINEAR MODEL")
+print("MSE:", anew_mean_linear_low, mse(anew_lingress_pred_pdus, a_pdus), anew_mean_linear_high)
+
+print("LOGISTIC MODEL")
+print("MSE:", anew_mean_logistic_low, mse(anew_logress_pred_pdus, a_pdus), anew_mean_logistic_high)
+
+print("GAUSSIAN MODEL")
+print("MSE:", anew_mean_gauss_low, mse(anew_gauss_pred_pdus, a_pdus), anew_mean_gauss_high)
 
 #plt.show()
